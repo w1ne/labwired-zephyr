@@ -1,0 +1,15 @@
+# Registers `west simulate`. Reference this from your west manifest on the
+# labwired-zephyr project entry:
+#
+#   manifest:
+#     projects:
+#       - name: labwired-zephyr
+#         url: https://github.com/w1ne/labwired-zephyr
+#         revision: main
+#         west-commands: west-commands.yml
+west-commands:
+  - file: scripts/west_commands/simulate.py
+    commands:
+      - name: simulate
+        class: Simulate
+        help: run a built Zephyr application in the LabWired simulator

@@ -1,0 +1,4 @@
+# Makes labwired-zephyr a Zephyr module so `west` lists it in the workspace.
+# The runner/west-command registration is done from the west manifest
+# (west-commands.yml); this file just declares the module.
+name: labwired-zephyr

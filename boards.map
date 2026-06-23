@@ -1,0 +1,11 @@
+# LabWired board map — the single source of truth for which LabWired system
+# manifest each Zephyr board target runs against. Shared with the hosted Zephyr
+# compiler (labwired-builder). One line per board:
+#
+#   <qualified Zephyr board target> : <LabWired system manifest filename>
+#
+# The manifest filename is resolved against the LabWired systems directory
+# (--systems-dir, or $LABWIRED_SYSTEMS_DIR, defaulting to <labwired>/configs/systems).
+# Add a board by adding one line here.
+
+nrf52840dk/nrf52840: nrf52840-dk.yaml
