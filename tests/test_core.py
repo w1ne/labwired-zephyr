@@ -43,6 +43,12 @@ SUPPORTED_ZEPHYR_TARGETS = {
     # STM32 boards with exact LabWired system manifests.
     "nucleo_f103rb": "nucleo-f103rb-epaper.yaml",
     "nucleo_f401re": "nucleo-f401re.yaml",
+    "blackpill_f401cc": "stm32f401cdu6-blackpill.yaml",
+    "blackpill_f401ce": "stm32f401cdu6-blackpill.yaml",
+    "stm32f401_mini": "stm32f401cdu6.yaml",
+    "black_f407ve": "nucleo-f407.yaml",
+    "black_f407zg_pro": "nucleo-f407.yaml",
+    "segger_trb_stm32f407": "nucleo-f407.yaml",
     "nucleo_h563zi": "nucleo-h563zi-demo.yaml",
     "nucleo_l073rz": "nucleo-l073rz.yaml",
     "nucleo_l476rg": "nucleo-l476rg.yaml",
@@ -52,6 +58,10 @@ SUPPORTED_ZEPHYR_TARGETS = {
     # Espressif boards with matching LabWired chip/board manifests.
     "esp32_devkitc_wroom/esp32/procpu": "esp32-wroom-32.yaml",
     "esp32c3_devkitm": "esp32c3-devkit.yaml",
+    "esp32s3_devkitc/esp32s3/procpu": "esp32s3-zero.yaml",
+    "esp32s3_devkitm/esp32s3/procpu": "esp32s3-zero.yaml",
+    "esp32s3_touch_lcd_1_28/esp32s3/procpu": "esp32s3-zero.yaml",
+    "xiao_esp32s3/esp32s3/procpu": "esp32s3-zero.yaml",
 }
 
 

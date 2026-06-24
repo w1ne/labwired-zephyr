@@ -26,6 +26,10 @@ _BOARD_TARGET_ALIASES = {
     "rpi_pico_rp2040": "rpi_pico/rp2040",
     "rpi_pico_rp2040_w": "rpi_pico/rp2040/w",
     "esp32_devkitc_wroom_esp32_procpu": "esp32_devkitc_wroom/esp32/procpu",
+    "esp32s3_devkitc_esp32s3_procpu": "esp32s3_devkitc/esp32s3/procpu",
+    "esp32s3_devkitm_esp32s3_procpu": "esp32s3_devkitm/esp32s3/procpu",
+    "esp32s3_touch_lcd_1_28_esp32s3_procpu": "esp32s3_touch_lcd_1_28/esp32s3/procpu",
+    "xiao_esp32s3_esp32s3_procpu": "xiao_esp32s3/esp32s3/procpu",
 }
 
 

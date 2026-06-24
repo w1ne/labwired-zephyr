@@ -77,8 +77,15 @@ because both use a Cortex-M4 core.
 
 | Zephyr board | LabWired system |
 | --- | --- |
+| `black_f407ve` | `nucleo-f407.yaml` |
+| `black_f407zg_pro` | `nucleo-f407.yaml` |
+| `blackpill_f401cc` | `stm32f401cdu6-blackpill.yaml` |
+| `blackpill_f401ce` | `stm32f401cdu6-blackpill.yaml` |
 | `esp32_devkitc_wroom/esp32/procpu` | `esp32-wroom-32.yaml` |
 | `esp32c3_devkitm` | `esp32c3-devkit.yaml` |
+| `esp32s3_devkitc/esp32s3/procpu` | `esp32s3-zero.yaml` |
+| `esp32s3_devkitm/esp32s3/procpu` | `esp32s3-zero.yaml` |
+| `esp32s3_touch_lcd_1_28/esp32s3/procpu` | `esp32s3-zero.yaml` |
 | `nrf52dk/nrf52832` | `nrf52-dk.yaml` |
 | `nrf52840dk/nrf52840` | `nrf52840-dk.yaml` |
 | `nucleo_f103rb` | `nucleo-f103rb-epaper.yaml` |
@@ -91,14 +98,16 @@ because both use a Cortex-M4 core.
 | `nucleo_wba52cg` | `nucleo_wba52cg.yaml` |
 | `rpi_pico` | `rp2040-pico.yaml` |
 | `rpi_pico/rp2040/w` | `rp2040-pico.yaml` |
+| `segger_trb_stm32f407` | `nucleo-f407.yaml` |
+| `stm32f401_mini` | `stm32f401cdu6.yaml` |
 | `xiao_ble` | `seeed-xiao-nrf52840-sense.yaml` |
 | `xiao_ble/nrf52840/sense` | `seeed-xiao-nrf52840-sense.yaml` |
+| `xiao_esp32s3/esp32s3/procpu` | `esp32s3-zero.yaml` |
 
 This covers the Zephyr targets that currently have matching LabWired system
-manifests. LabWired also has chip models or fixtures for nearby boards such as
-STM32F407, STM32F401CDU6 Black Pill, and ESP32-S3-Zero; those are not listed
-until their exact Zephyr board identity is backed by a matching LabWired system
-manifest.
+manifests or a model-backed board manifest for the same SoC family. Secondary
+ESP32 app-core targets are not listed because `west simulate` boots one ELF
+through the primary-core LabWired runner path.
 
 ## Using the runner instead
 
