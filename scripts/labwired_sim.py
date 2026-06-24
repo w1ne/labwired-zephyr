@@ -22,7 +22,10 @@ _BOARD_TARGET_ALIASES = {
     "nrf52840dk_nrf52840": "nrf52840dk/nrf52840",
     "nrf52dk_nrf52832": "nrf52dk/nrf52832",
     "xiao_ble_nrf52840": "xiao_ble/nrf52840",
+    "xiao_ble_nrf52840_sense": "xiao_ble/nrf52840/sense",
     "rpi_pico_rp2040": "rpi_pico/rp2040",
+    "rpi_pico_rp2040_w": "rpi_pico/rp2040/w",
+    "esp32_devkitc_wroom_esp32_procpu": "esp32_devkitc_wroom/esp32/procpu",
 }
 
 

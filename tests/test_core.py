@@ -31,17 +31,32 @@ def test_repo_board_map_has_nrf52840():
     assert m["nrf52840dk/nrf52840"] == "nrf52840-dk.yaml"
 
 
-@pytest.mark.parametrize(
-    ("board", "system"),
-    [
-        ("nrf52840dk/nrf52840", "nrf52840-dk.yaml"),
-        ("nrf52dk/nrf52832", "nrf52-dk.yaml"),
-        ("xiao_ble/nrf52840", "seeed-xiao-nrf52840-sense.yaml"),
-        ("nucleo_l476rg", "nucleo-l476rg.yaml"),
-        ("rpi_pico/rp2040", "rp2040-pico.yaml"),
-    ],
-)
-def test_repo_board_map_covers_representative_supported_targets(board, system):
+SUPPORTED_ZEPHYR_TARGETS = {
+    # Nordic
+    "nrf52840dk/nrf52840": "nrf52840-dk.yaml",
+    "nrf52dk/nrf52832": "nrf52-dk.yaml",
+    "xiao_ble": "seeed-xiao-nrf52840-sense.yaml",
+    "xiao_ble/nrf52840/sense": "seeed-xiao-nrf52840-sense.yaml",
+    # RP2040
+    "rpi_pico": "rp2040-pico.yaml",
+    "rpi_pico/rp2040/w": "rp2040-pico.yaml",
+    # STM32 boards with exact LabWired system manifests.
+    "nucleo_f103rb": "nucleo-f103rb-epaper.yaml",
+    "nucleo_f401re": "nucleo-f401re.yaml",
+    "nucleo_h563zi": "nucleo-h563zi-demo.yaml",
+    "nucleo_l073rz": "nucleo-l073rz.yaml",
+    "nucleo_l476rg": "nucleo-l476rg.yaml",
+    "nucleo_g474re": "nucleo_g474re.yaml",
+    "nucleo_wb55rg": "mb1355c.yaml",
+    "nucleo_wba52cg": "nucleo_wba52cg.yaml",
+    # Espressif boards with matching LabWired chip/board manifests.
+    "esp32_devkitc_wroom/esp32/procpu": "esp32-wroom-32.yaml",
+    "esp32c3_devkitm": "esp32c3-devkit.yaml",
+}
+
+
+@pytest.mark.parametrize(("board", "system"), sorted(SUPPORTED_ZEPHYR_TARGETS.items()))
+def test_repo_board_map_covers_supported_zephyr_targets(board, system):
     m = labwired_sim.load_board_map(BOARD_MAP)
     assert m[board] == system
 
@@ -111,9 +126,9 @@ def test_read_board_target_normalizes_legacy_board_target_separator(tmp_path):
     z = tmp_path / "zephyr"
     z.mkdir()
     (z / ".config").write_text(
-        'CONFIG_BOARD_TARGET="nrf52840dk_nrf52840"\n'
+        'CONFIG_BOARD_TARGET="xiao_ble_nrf52840_sense"\n'
     )
-    assert labwired_sim.read_board_target(tmp_path) == "nrf52840dk/nrf52840"
+    assert labwired_sim.read_board_target(tmp_path) == "xiao_ble/nrf52840/sense"
 
 
 def test_read_board_target_missing_config_is_clear(tmp_path):

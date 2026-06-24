@@ -66,7 +66,7 @@ manifest:
 | `--timeout` | wall-clock timeout in seconds |
 | `-- ARG…` | extra args passed through to `labwired` (e.g. `--trace`) |
 
-## Supported boards
+## Supported Zephyr targets
 
 Boards are listed in [`boards.map`](boards.map). Add one line — the qualified
 Zephyr board target and the LabWired system manifest it runs against — to add a
@@ -77,11 +77,28 @@ because both use a Cortex-M4 core.
 
 | Zephyr board | LabWired system |
 | --- | --- |
-| `nrf52840dk/nrf52840` | `nrf52840-dk.yaml` |
+| `esp32_devkitc_wroom/esp32/procpu` | `esp32-wroom-32.yaml` |
+| `esp32c3_devkitm` | `esp32c3-devkit.yaml` |
 | `nrf52dk/nrf52832` | `nrf52-dk.yaml` |
-| `xiao_ble/nrf52840` | `seeed-xiao-nrf52840-sense.yaml` |
+| `nrf52840dk/nrf52840` | `nrf52840-dk.yaml` |
+| `nucleo_f103rb` | `nucleo-f103rb-epaper.yaml` |
+| `nucleo_f401re` | `nucleo-f401re.yaml` |
+| `nucleo_g474re` | `nucleo_g474re.yaml` |
+| `nucleo_h563zi` | `nucleo-h563zi-demo.yaml` |
+| `nucleo_l073rz` | `nucleo-l073rz.yaml` |
 | `nucleo_l476rg` | `nucleo-l476rg.yaml` |
-| `rpi_pico/rp2040` | `rp2040-pico.yaml` |
+| `nucleo_wb55rg` | `mb1355c.yaml` |
+| `nucleo_wba52cg` | `nucleo_wba52cg.yaml` |
+| `rpi_pico` | `rp2040-pico.yaml` |
+| `rpi_pico/rp2040/w` | `rp2040-pico.yaml` |
+| `xiao_ble` | `seeed-xiao-nrf52840-sense.yaml` |
+| `xiao_ble/nrf52840/sense` | `seeed-xiao-nrf52840-sense.yaml` |
+
+This covers the Zephyr targets that currently have matching LabWired system
+manifests. LabWired also has chip models or fixtures for nearby boards such as
+STM32F407, STM32F401CDU6 Black Pill, and ESP32-S3-Zero; those are not listed
+until their exact Zephyr board identity is backed by a matching LabWired system
+manifest.
 
 ## Using the runner instead
 

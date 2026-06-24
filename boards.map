@@ -10,8 +10,28 @@
 # on CPU core is not enough because the Zephyr image still touches SoC-specific
 # memory-mapped peripherals during boot.
 
-nrf52840dk/nrf52840: nrf52840-dk.yaml
+# Nordic
 nrf52dk/nrf52832: nrf52-dk.yaml
+nrf52840dk/nrf52840: nrf52840-dk.yaml
+xiao_ble: seeed-xiao-nrf52840-sense.yaml
 xiao_ble/nrf52840: seeed-xiao-nrf52840-sense.yaml
-nucleo_l476rg: nucleo-l476rg.yaml
+xiao_ble/nrf52840/sense: seeed-xiao-nrf52840-sense.yaml
+
+# RP2040
+rpi_pico: rp2040-pico.yaml
 rpi_pico/rp2040: rp2040-pico.yaml
+rpi_pico/rp2040/w: rp2040-pico.yaml
+
+# STM32
+nucleo_f103rb: nucleo-f103rb-epaper.yaml
+nucleo_f401re: nucleo-f401re.yaml
+nucleo_h563zi: nucleo-h563zi-demo.yaml
+nucleo_l073rz: nucleo-l073rz.yaml
+nucleo_l476rg: nucleo-l476rg.yaml
+nucleo_g474re: nucleo_g474re.yaml
+nucleo_wb55rg: mb1355c.yaml
+nucleo_wba52cg: nucleo_wba52cg.yaml
+
+# Espressif primary-CPU targets
+esp32_devkitc_wroom/esp32/procpu: esp32-wroom-32.yaml
+esp32c3_devkitm: esp32c3-devkit.yaml
