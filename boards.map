@@ -6,6 +6,12 @@
 #
 # The manifest filename is resolved against the LabWired systems directory
 # (--systems-dir, or $LABWIRED_SYSTEMS_DIR, defaulting to <labwired>/configs/systems).
-# Add a board by adding one line here.
+# Add a board by adding one line here. Keep this board-specific: matching only
+# on CPU core is not enough because the Zephyr image still touches SoC-specific
+# memory-mapped peripherals during boot.
 
 nrf52840dk/nrf52840: nrf52840-dk.yaml
+nrf52dk/nrf52832: nrf52-dk.yaml
+xiao_ble/nrf52840: seeed-xiao-nrf52840-sense.yaml
+nucleo_l476rg: nucleo-l476rg.yaml
+rpi_pico/rp2040: rp2040-pico.yaml

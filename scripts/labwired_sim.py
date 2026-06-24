@@ -18,9 +18,21 @@ from pathlib import Path
 # room to spare while still terminating a hung run.
 DEFAULT_MAX_STEPS = 5_000_000
 
+_BOARD_TARGET_ALIASES = {
+    "nrf52840dk_nrf52840": "nrf52840dk/nrf52840",
+    "nrf52dk_nrf52832": "nrf52dk/nrf52832",
+    "xiao_ble_nrf52840": "xiao_ble/nrf52840",
+    "rpi_pico_rp2040": "rpi_pico/rp2040",
+}
+
 
 class LabwiredError(Exception):
     """A user-facing error (bad board, missing file) — message is shown as-is."""
+
+
+def normalize_board_target(board: str) -> str:
+    """Normalize known Zephyr board-target spellings across releases."""
+    return _BOARD_TARGET_ALIASES.get(board, board)
 
 
 def load_board_map(path: os.PathLike | str) -> dict[str, str]:
@@ -39,7 +51,7 @@ def load_board_map(path: os.PathLike | str) -> dict[str, str]:
         if ":" not in line:
             raise LabwiredError(f"{path}:{lineno}: expected 'board: system.yaml', got {raw!r}")
         board, system = line.split(":", 1)
-        board, system = board.strip(), system.strip()
+        board, system = normalize_board_target(board.strip()), system.strip()
         if not board or not system:
             raise LabwiredError(f"{path}:{lineno}: empty board or system in {raw!r}")
         mapping[board] = system
@@ -64,7 +76,7 @@ def read_board_target(build_dir: os.PathLike | str) -> str:
     result = board_target or board
     if not result:
         raise LabwiredError(f"could not determine the board from {config}")
-    return result
+    return normalize_board_target(result)
 
 
 def resolve_system(
@@ -80,6 +92,7 @@ def resolve_system(
     """
     if override:
         return Path(override)
+    board = normalize_board_target(board)
     system_name = board_map.get(board)
     if not system_name:
         known = ", ".join(sorted(board_map)) or "(empty map)"

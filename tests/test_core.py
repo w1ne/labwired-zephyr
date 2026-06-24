@@ -31,6 +31,21 @@ def test_repo_board_map_has_nrf52840():
     assert m["nrf52840dk/nrf52840"] == "nrf52840-dk.yaml"
 
 
+@pytest.mark.parametrize(
+    ("board", "system"),
+    [
+        ("nrf52840dk/nrf52840", "nrf52840-dk.yaml"),
+        ("nrf52dk/nrf52832", "nrf52-dk.yaml"),
+        ("xiao_ble/nrf52840", "seeed-xiao-nrf52840-sense.yaml"),
+        ("nucleo_l476rg", "nucleo-l476rg.yaml"),
+        ("rpi_pico/rp2040", "rp2040-pico.yaml"),
+    ],
+)
+def test_repo_board_map_covers_representative_supported_targets(board, system):
+    m = labwired_sim.load_board_map(BOARD_MAP)
+    assert m[board] == system
+
+
 def test_load_board_map_rejects_malformed(tmp_path):
     f = tmp_path / "boards.map"
     f.write_text("this-line-has-no-colon\n")
@@ -90,6 +105,15 @@ def test_read_board_target_falls_back_to_board(tmp_path):
     z.mkdir()
     (z / ".config").write_text('CONFIG_BOARD="nrf52840dk"\n')
     assert labwired_sim.read_board_target(tmp_path) == "nrf52840dk"
+
+
+def test_read_board_target_normalizes_legacy_board_target_separator(tmp_path):
+    z = tmp_path / "zephyr"
+    z.mkdir()
+    (z / ".config").write_text(
+        'CONFIG_BOARD_TARGET="nrf52840dk_nrf52840"\n'
+    )
+    assert labwired_sim.read_board_target(tmp_path) == "nrf52840dk/nrf52840"
 
 
 def test_read_board_target_missing_config_is_clear(tmp_path):

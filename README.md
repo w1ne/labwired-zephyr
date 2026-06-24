@@ -70,11 +70,18 @@ manifest:
 
 Boards are listed in [`boards.map`](boards.map). Add one line — the qualified
 Zephyr board target and the LabWired system manifest it runs against — to add a
-board.
+board. The map is intentionally board-specific, not just CPU-core-specific: a
+Zephyr image still touches SoC-specific memory-mapped peripherals during boot,
+so a Cortex-M4 binary built for STM32 cannot safely run on an nRF52 manifest just
+because both use a Cortex-M4 core.
 
 | Zephyr board | LabWired system |
 | --- | --- |
 | `nrf52840dk/nrf52840` | `nrf52840-dk.yaml` |
+| `nrf52dk/nrf52832` | `nrf52-dk.yaml` |
+| `xiao_ble/nrf52840` | `seeed-xiao-nrf52840-sense.yaml` |
+| `nucleo_l476rg` | `nucleo-l476rg.yaml` |
+| `rpi_pico/rp2040` | `rp2040-pico.yaml` |
 
 ## Using the runner instead
 
