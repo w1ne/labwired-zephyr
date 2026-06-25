@@ -68,46 +68,27 @@ manifest:
 
 ## Supported Zephyr targets
 
-Boards are listed in [`boards.map`](boards.map). Add one line — the qualified
-Zephyr board target and the LabWired system manifest it runs against — to add a
-board. The map is intentionally board-specific, not just CPU-core-specific: a
-Zephyr image still touches SoC-specific memory-mapped peripherals during boot,
-so a Cortex-M4 binary built for STM32 cannot safely run on an nRF52 manifest just
-because both use a Cortex-M4 core.
+Boards are listed in [`boards.map`](boards.map), which is the authoritative
+snapshot. It currently maps 156 Zephyr target identifiers whose `board.yml`
+declares a LabWired-modeled SoC family: nRF52832, nRF52840, RP2040, ESP32,
+ESP32-C3, ESP32-S3, STM32F103, STM32F401, STM32F407, STM32G474, STM32H563,
+STM32L073, STM32L476, STM32WB55, and STM32WBA52.
 
-| Zephyr board | LabWired system |
+Each line maps a qualified Zephyr board target to the LabWired system manifest
+it should run against. Prefer exact board manifests when they exist; otherwise
+map same-SoC boards to the closest model-backed system manifest. Do not add
+core-only mappings across different SoC families: a Cortex-M4 STM32 image and a
+Cortex-M4 nRF52 image touch different memory-mapped peripherals during boot.
+
+Representative examples:
+
+| Zephyr target | LabWired system |
 | --- | --- |
-| `black_f407ve` | `nucleo-f407.yaml` |
-| `black_f407zg_pro` | `nucleo-f407.yaml` |
-| `blackpill_f401cc` | `stm32f401cdu6-blackpill.yaml` |
-| `blackpill_f401ce` | `stm32f401cdu6-blackpill.yaml` |
-| `esp32_devkitc_wroom/esp32/procpu` | `esp32-wroom-32.yaml` |
-| `esp32c3_devkitm` | `esp32c3-devkit.yaml` |
-| `esp32s3_devkitc/esp32s3/procpu` | `esp32s3-zero.yaml` |
-| `esp32s3_devkitm/esp32s3/procpu` | `esp32s3-zero.yaml` |
-| `esp32s3_touch_lcd_1_28/esp32s3/procpu` | `esp32s3-zero.yaml` |
-| `nrf52dk/nrf52832` | `nrf52-dk.yaml` |
 | `nrf52840dk/nrf52840` | `nrf52840-dk.yaml` |
-| `nucleo_f103rb` | `nucleo-f103rb-epaper.yaml` |
-| `nucleo_f401re` | `nucleo-f401re.yaml` |
-| `nucleo_g474re` | `nucleo_g474re.yaml` |
 | `nucleo_h563zi` | `nucleo-h563zi-demo.yaml` |
-| `nucleo_l073rz` | `nucleo-l073rz.yaml` |
-| `nucleo_l476rg` | `nucleo-l476rg.yaml` |
-| `nucleo_wb55rg` | `mb1355c.yaml` |
-| `nucleo_wba52cg` | `nucleo_wba52cg.yaml` |
-| `rpi_pico` | `rp2040-pico.yaml` |
-| `rpi_pico/rp2040/w` | `rp2040-pico.yaml` |
-| `segger_trb_stm32f407` | `nucleo-f407.yaml` |
-| `stm32f401_mini` | `stm32f401cdu6.yaml` |
-| `xiao_ble` | `seeed-xiao-nrf52840-sense.yaml` |
-| `xiao_ble/nrf52840/sense` | `seeed-xiao-nrf52840-sense.yaml` |
-| `xiao_esp32s3/esp32s3/procpu` | `esp32s3-zero.yaml` |
-
-This covers the Zephyr targets that currently have matching LabWired system
-manifests or a model-backed board manifest for the same SoC family. Secondary
-ESP32 app-core targets are not listed because `west simulate` boots one ELF
-through the primary-core LabWired runner path.
+| `esp32s3_luatos_core/esp32s3/procpu` | `esp32s3-zero.yaml` |
+| `blackpill_f401ce` | `stm32f401cdu6-blackpill.yaml` |
+| `xiao_rp2040` | `rp2040-pico.yaml` |
 
 ## Using the runner instead
 

@@ -71,6 +71,16 @@ def test_repo_board_map_covers_supported_zephyr_targets(board, system):
     assert m[board] == system
 
 
+def test_repo_board_map_covers_model_backed_zephyr_catalog_snapshot():
+    m = labwired_sim.load_board_map(BOARD_MAP)
+    assert len(m) == 156
+    assert m["xiao_esp32c3"] == "esp32c3-devkit.yaml"
+    assert m["esp32s3_luatos_core/esp32s3/procpu"] == "esp32s3-zero.yaml"
+    assert m["stm32_min_dev@blue"] == "stm32f103-bare.yaml"
+    assert "esp32s2_saola" not in m
+    assert "esp32c6_devkitc" not in m
+
+
 def test_load_board_map_rejects_malformed(tmp_path):
     f = tmp_path / "boards.map"
     f.write_text("this-line-has-no-colon\n")
