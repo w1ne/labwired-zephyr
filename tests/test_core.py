@@ -9,6 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import labwired_sim  # noqa: E402
+import validate_matrix  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 BOARD_MAP = REPO / "boards.map"
@@ -155,3 +156,47 @@ def test_read_board_target_missing_config_is_clear(tmp_path):
     with pytest.raises(labwired_sim.LabwiredError) as exc:
         labwired_sim.read_board_target(tmp_path)
     assert "build first" in str(exc.value)
+
+
+def test_validate_matrix_expected_hello_world_line():
+    assert (
+        validate_matrix.expected_hello("nrf52840dk/nrf52840")
+        == "Hello World! nrf52840dk/nrf52840"
+    )
+
+
+def test_validate_matrix_classifies_run_pass_from_uart_output():
+    result = validate_matrix.classify_run_result(
+        board="nrf52840dk/nrf52840",
+        returncode=0,
+        output="boot log\nHello World! nrf52840dk/nrf52840\r\n",
+    )
+    assert result.status == "run_pass"
+    assert "Hello World!" in result.detail
+
+
+def test_validate_matrix_classifies_wrong_or_missing_uart_output():
+    result = validate_matrix.classify_run_result(
+        board="nrf52840dk/nrf52840",
+        returncode=0,
+        output="boot log\nsome other UART\n",
+    )
+    assert result.status == "run_fail"
+    assert "missing expected UART" in result.detail
+    assert "some other UART" in result.detail
+
+
+def test_validate_matrix_summary_counts_statuses():
+    rows = [
+        validate_matrix.Result("a", "sys.yaml", "run_pass", "ok", None),
+        validate_matrix.Result("b", "sys.yaml", "build_fail", "no", None),
+        validate_matrix.Result("c", "sys.yaml", "run_pass", "ok", None),
+    ]
+    assert validate_matrix.summarize(rows) == {"build_fail": 1, "run_pass": 2}
+
+
+def test_validate_matrix_parse_jobs_default_and_override():
+    default_args = validate_matrix.parse_args(["--systems-dir", "/sys"])
+    assert default_args.jobs == 1
+    override_args = validate_matrix.parse_args(["--systems-dir", "/sys", "--jobs", "4"])
+    assert override_args.jobs == 4
