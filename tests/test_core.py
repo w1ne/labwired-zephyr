@@ -200,3 +200,73 @@ def test_validate_matrix_parse_jobs_default_and_override():
     assert default_args.jobs == 1
     override_args = validate_matrix.parse_args(["--systems-dir", "/sys", "--jobs", "4"])
     assert override_args.jobs == 4
+# ── DTS-derived system manifest (the breadth path) ──────────────────────────
+
+FIXTURE_DTS = REPO / "tests" / "fixtures" / "nrf52840dk_merged.dts"
+
+# python-devicetree is only needed for the derivation path, not the runner core.
+devicetree = pytest.importorskip("devicetree")
+
+
+def _build_with_dts(tmp_path):
+    """A fake finished build dir whose zephyr.dts is the nrf52840dk fixture."""
+    z = tmp_path / "build" / "zephyr"
+    z.mkdir(parents=True)
+    (z / "zephyr.dts").write_text(FIXTURE_DTS.read_text())
+    return tmp_path / "build"
+
+
+def _chips_dir(tmp_path, *chips):
+    d = tmp_path / "chips"
+    d.mkdir()
+    for chip in chips:
+        (d / f"{chip}.yaml").write_text(f'name: "{chip}"\n')
+    return d
+
+
+def test_derive_system_yaml_writes_runnable_manifest(tmp_path):
+    import yaml
+
+    build = _build_with_dts(tmp_path)
+    chips = _chips_dir(tmp_path, "nrf52840")
+    out = labwired_sim.derive_system_yaml(
+        build, "nrf52840", chips, build / "labwired" / "system.yaml", name="nrf52840dk/nrf52840"
+    )
+    parsed = yaml.safe_load(out.read_text())
+    # board wiring came from the devicetree
+    assert {e["id"] for e in parsed["board_io"]} == {"led0", "led1", "button0"}
+    assert {e["id"] for e in parsed["external_devices"]} == {"bme280", "sdhc0"}
+    # chip ref is absolute so the manifest runs from anywhere, and points at the real file
+    assert parsed["chip"] == str((chips / "nrf52840.yaml").resolve())
+    assert Path(parsed["chip"]).exists()
+
+
+def test_derive_system_yaml_missing_dts_is_clear(tmp_path):
+    chips = _chips_dir(tmp_path, "nrf52840")
+    (tmp_path / "build" / "zephyr").mkdir(parents=True)
+    with pytest.raises(labwired_sim.LabwiredError) as exc:
+        labwired_sim.derive_system_yaml(
+            tmp_path / "build", "nrf52840", chips, tmp_path / "out.yaml"
+        )
+    assert "merged devicetree" in str(exc.value)
+
+
+def test_derive_system_yaml_missing_chip_is_clear(tmp_path):
+    build = _build_with_dts(tmp_path)
+    chips = _chips_dir(tmp_path)  # empty — no chip descriptor
+    with pytest.raises(labwired_sim.LabwiredError) as exc:
+        labwired_sim.derive_system_yaml(build, "nrf52840", chips, build / "out.yaml")
+    assert "must be modelled first" in str(exc.value)
+
+
+def test_simulate_requires_chip_and_chips_dir_to_derive(tmp_path):
+    build = _build_with_dts(tmp_path)
+    (build / "zephyr" / "zephyr.elf").write_text("")  # presence only
+    with pytest.raises(labwired_sim.LabwiredError) as exc:
+        labwired_sim.simulate(
+            build_dir=build,
+            board="some_unmapped/board",
+            board_map_path=BOARD_MAP,
+            derive=True,
+        )
+    assert "pass --chip and" in str(exc.value)
