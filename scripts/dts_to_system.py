@@ -17,10 +17,22 @@ is known when you pick the board), and the board IO is read from the tree.
 Emits ``system.yaml`` text on stdout.
 """
 import argparse
+import os
 import struct
 import sys
+from pathlib import Path
 
-from devicetree import dtlib
+try:
+    from devicetree import dtlib
+except ModuleNotFoundError:  # pragma: no cover - environment fallback
+    # Zephyr ships python-devicetree in-tree but does not always pip-install it
+    # into the west venv. Ride the bundled copy via $ZEPHYR_BASE so derivation
+    # works in any west environment with no extra install.
+    _zb = os.environ.get("ZEPHYR_BASE")
+    _bundled = Path(_zb) / "scripts" / "dts" / "python-devicetree" / "src" if _zb else None
+    if _bundled and (_bundled / "devicetree" / "dtlib.py").exists():
+        sys.path.insert(0, str(_bundled))
+    from devicetree import dtlib
 
 GPIO_ACTIVE_LOW = 1 << 0  # Zephyr GPIO flag bit 0
 
