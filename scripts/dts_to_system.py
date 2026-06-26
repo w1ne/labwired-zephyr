@@ -78,13 +78,77 @@ def derive_board_io(dt: "dtlib.DT") -> list:
     return io
 
 
-def to_system_yaml(name: str, chip: str, board_io: list) -> str:
+def _bus_kind(parent) -> str:
+    """The bus a controller node sits on, by node name (i2c@.. / spi@..). '' if not a bus."""
+    base = parent.name.split("@", 1)[0]
+    if base.startswith("i2c"):
+        return "i2c"
+    if base.startswith("spi"):
+        return "spi"
+    return ""
+
+
+def _enabled(node) -> bool:
+    status = node.props.get("status")
+    return status is None or status.to_string() == "okay"
+
+
+def derive_external_devices(dt: "dtlib.DT") -> list:
+    """Off-chip, bus-connected devices (I2C/SPI sensors, displays, flash, …).
+
+    These are the child nodes of an enabled i2c/spi controller — the parts that
+    automatic DTS->sim converters like dts2repl SILENTLY DROP. Riding them is the
+    differentiation: a device's verdict can cover its real sensors, not just the SoC.
+    Emits `type` from the compatible's model, `connection` = the bus controller, and
+    the I2C address / SPI chip-select from `reg`.
+    """
+    devices = []
+    for node in dt.node_iter():
+        parent = node.parent
+        if parent is None:
+            continue
+        bus = _bus_kind(parent)
+        if not bus or not _enabled(parent) or not _enabled(node):
+            continue
+        compat = node.props.get("compatible")
+        reg = node.props.get("reg")
+        if compat is None or reg is None:
+            continue
+        addr = reg.to_nums()[0]
+        connection = parent.labels[0] if parent.labels else parent.name.split("@", 1)[0]
+        ident = node.labels[0] if node.labels else node.name.split("@", 1)[0]
+        dev_type = compat.to_strings()[0].split(",")[-1]  # "bosch,bme280" -> "bme280"
+        config = {"i2c_addr": hex(addr)} if bus == "i2c" else {"cs": addr}
+        devices.append(
+            {"id": ident, "type": dev_type, "connection": connection, "config": config}
+        )
+    devices.sort(key=lambda d: (d["connection"], d["id"]))
+    return devices
+
+
+def to_system_yaml(name: str, chip: str, board_io: list, external_devices: list = None) -> str:
+    external_devices = external_devices or []
     lines = [
         f"# LabWired system manifest — derived from Zephyr devicetree for {name}",
         f'name: "{name}"',
         f'chip: "../../configs/chips/{chip}.yaml"',
-        "external_devices: []",
     ]
+    if not external_devices:
+        lines.append("external_devices: []")
+    else:
+        lines.append("external_devices:")
+        for dvc in external_devices:
+            lines.append(f'  - id: "{dvc["id"]}"')
+            lines.append(f'    type: "{dvc["type"]}"')
+            lines.append(f'    connection: "{dvc["connection"]}"')
+            cfg = dvc["config"]
+            if cfg:
+                lines.append("    config:")
+                for k, v in cfg.items():
+                    rendered = f'"{v}"' if isinstance(v, str) else v
+                    lines.append(f"      {k}: {rendered}")
+            else:
+                lines.append("    config: {}")
     if not board_io:
         lines.append("board_io: []")
     else:
@@ -108,7 +172,10 @@ def main(argv=None) -> int:
 
     dt = dtlib.DT(args.dts)
     board_io = derive_board_io(dt)
-    sys.stdout.write(to_system_yaml(args.name or args.chip, args.chip, board_io))
+    external_devices = derive_external_devices(dt)
+    sys.stdout.write(
+        to_system_yaml(args.name or args.chip, args.chip, board_io, external_devices)
+    )
     return 0
 
 

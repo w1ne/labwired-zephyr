@@ -23,6 +23,37 @@
 			status = "okay";
 			phandle = <0x7>;
 		};
+		i2c0: i2c@40003000 {
+			compatible = "nordic,nrf-twim";
+			reg = <0x40003000 0x1000>;
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+			phandle = <0x8>;
+			bme280@76 {
+				compatible = "bosch,bme280";
+				reg = <0x76>;
+				status = "okay";
+			};
+			disabled_sensor@77 {
+				compatible = "ti,ina219";
+				reg = <0x77>;
+				status = "disabled";
+			};
+		};
+		spi0: spi@40004000 {
+			compatible = "nordic,nrf-spim";
+			reg = <0x40004000 0x1000>;
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			status = "okay";
+			phandle = <0x9>;
+			sdhc0: sdhc@0 {
+				compatible = "zephyr,sdhc-spi-slot";
+				reg = <0x0>;
+				status = "okay";
+			};
+		};
 	};
 	leds {
 		compatible = "gpio-leds";
