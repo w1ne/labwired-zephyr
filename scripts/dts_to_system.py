@@ -126,12 +126,19 @@ def derive_external_devices(dt: "dtlib.DT") -> list:
     return devices
 
 
-def to_system_yaml(name: str, chip: str, board_io: list, external_devices: list = None) -> str:
+def to_system_yaml(
+    name: str, chip: str, board_io: list, external_devices: list = None, chip_ref: str = None
+) -> str:
     external_devices = external_devices or []
+    # The emitted ``chip:`` is resolved relative to the system file's own
+    # directory by LabWired. The default sibling path works when the system
+    # lives in configs/systems; a derived system written elsewhere (e.g. a temp
+    # dir at run time) needs an explicit, usually absolute, ``chip_ref``.
+    chip_value = chip_ref if chip_ref else f"../../configs/chips/{chip}.yaml"
     lines = [
         f"# LabWired system manifest — derived from Zephyr devicetree for {name}",
         f'name: "{name}"',
-        f'chip: "../../configs/chips/{chip}.yaml"',
+        f'chip: "{chip_value}"',
     ]
     if not external_devices:
         lines.append("external_devices: []")
@@ -168,13 +175,20 @@ def main(argv=None) -> int:
     ap.add_argument("dts", help="path to the merged devicetree (build/zephyr/zephyr.dts)")
     ap.add_argument("--chip", required=True, help="LabWired SoC id (e.g. nrf52840)")
     ap.add_argument("--name", help="system name (defaults to the chip id)")
+    ap.add_argument(
+        "--chip-ref",
+        help="verbatim value for the system's chip: field (e.g. an absolute path "
+        "to the chip.yaml); defaults to ../../configs/chips/<chip>.yaml",
+    )
     args = ap.parse_args(argv)
 
     dt = dtlib.DT(args.dts)
     board_io = derive_board_io(dt)
     external_devices = derive_external_devices(dt)
     sys.stdout.write(
-        to_system_yaml(args.name or args.chip, args.chip, board_io, external_devices)
+        to_system_yaml(
+            args.name or args.chip, args.chip, board_io, external_devices, args.chip_ref
+        )
     )
     return 0
 

@@ -116,6 +116,61 @@ def resolve_system(
     return Path(systems_dir) / system_name
 
 
+def merged_dts_path(build_dir: os.PathLike | str) -> Path:
+    """The merged devicetree a finished build leaves at ``build/zephyr/zephyr.dts``."""
+    return Path(build_dir) / "zephyr" / "zephyr.dts"
+
+
+def derive_system_yaml(
+    build_dir: os.PathLike | str,
+    chip: str,
+    chips_dir: os.PathLike | str,
+    out_path: os.PathLike | str,
+    name: str | None = None,
+) -> Path:
+    """Derive a runnable system manifest from a build's own merged devicetree.
+
+    This is the breadth path: instead of a hand-authored manifest mapped per
+    board in ``boards.map``, the board's LEDs/buttons and bus devices come
+    straight from the devicetree the build already produced. The emitted
+    ``chip:`` is the absolute ``chips_dir/<chip>.yaml`` so the written manifest
+    runs from anywhere (a temp dir), not just configs/systems. Requires the chip
+    descriptor to already exist — derivation supplies the board wiring, not the
+    silicon model.
+    """
+    # Imported lazily and locally: keep module import dep-free (the dts deriver
+    # needs python-devicetree, which the runner core otherwise does not).
+    import sys as _sys
+
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import dts_to_system  # noqa: PLC0415
+
+    dts = merged_dts_path(build_dir)
+    if not dts.exists():
+        raise LabwiredError(
+            f"no merged devicetree at {dts} — build first (west build -b <board>) "
+            f"before deriving a system manifest"
+        )
+    chip_path = Path(chips_dir) / f"{chip}.yaml"
+    if not chip_path.exists():
+        raise LabwiredError(
+            f"chip descriptor not found: {chip_path}. Derivation supplies board "
+            f"wiring, not the silicon model — the chip '{chip}' must be modelled first."
+        )
+    dt = dts_to_system.dtlib.DT(str(dts))
+    text = dts_to_system.to_system_yaml(
+        name or chip,
+        chip,
+        dts_to_system.derive_board_io(dt),
+        dts_to_system.derive_external_devices(dt),
+        chip_ref=str(chip_path.resolve()),
+    )
+    out = Path(out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(text, encoding="utf-8")
+    return out
+
+
 def build_argv(
     labwired_bin: os.PathLike | str,
     elf: os.PathLike | str,
@@ -162,6 +217,9 @@ def simulate(
     timeout: float | None = None,
     extra_args: list[str] | None = None,
     capture: bool = False,
+    derive: bool = False,
+    chip: str | None = None,
+    chips_dir: os.PathLike | str | None = None,
 ) -> tuple[int, str | None]:
     """Resolve everything and run one firmware ELF in LabWired.
 
@@ -169,6 +227,12 @@ def simulate(
     child's stdout/stderr stream straight through (live UART console); with
     ``capture=True`` they are captured and returned (used by the integration
     test). A ``timeout`` that fires is reported as a non-zero return code.
+
+    System manifest resolution, in order: an explicit ``system_override``; else,
+    if ``derive`` is set (or the board is absent from ``boards.map`` but a
+    ``chip``+``chips_dir`` are available), the manifest is derived from the
+    build's own merged devicetree — the breadth path that needs no per-board
+    hand-authoring; else the ``boards.map`` lookup.
     """
     labwired_bin = labwired_bin or default_labwired_bin()
     systems_dir = systems_dir if systems_dir is not None else default_systems_dir()
@@ -177,7 +241,16 @@ def simulate(
     if not elf_path.exists():
         raise LabwiredError(f"firmware ELF not found: {elf_path}")
     board_map = load_board_map(board_map_path)
-    system = resolve_system(board, board_map, systems_dir, system_override)
+    if not system_override and (derive or (board not in board_map and chip and chips_dir)):
+        if not (chip and chips_dir):
+            raise LabwiredError(
+                f"cannot derive a system for board '{board}': pass --chip and "
+                f"--chips-dir (the SoC id and the LabWired configs/chips directory)."
+            )
+        derived = Path(build_dir) / "labwired" / "system.yaml"
+        system = derive_system_yaml(build_dir, chip, chips_dir, derived, name=board)
+    else:
+        system = resolve_system(board, board_map, systems_dir, system_override)
     if not Path(system).exists():
         raise LabwiredError(f"LabWired system manifest not found: {system}")
 
