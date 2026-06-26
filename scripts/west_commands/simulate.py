@@ -64,6 +64,21 @@ class Simulate(WestCommand):
             help="board → system manifest map (default: the repo's boards.map)",
         )
         parser.add_argument(
+            "--derive", action="store_true",
+            help="derive the system manifest from the build's own devicetree "
+                 "instead of the board map (needs --chip and --chips-dir); also "
+                 "the automatic fallback for a board not in the map",
+        )
+        parser.add_argument(
+            "--chip", default=None,
+            help="LabWired SoC id for --derive (e.g. nrf52840)",
+        )
+        parser.add_argument(
+            "--chips-dir", default=None,
+            help="directory holding chip descriptors for --derive "
+                 "(e.g. <labwired>/configs/chips)",
+        )
+        parser.add_argument(
             "--max-steps", type=int, default=labwired_sim.DEFAULT_MAX_STEPS,
             help=f"max simulation steps (default: {labwired_sim.DEFAULT_MAX_STEPS})",
         )
@@ -88,6 +103,9 @@ class Simulate(WestCommand):
                 max_steps=args.max_steps,
                 timeout=args.timeout,
                 extra_args=list(args.labwired_args) + list(unknown_args),
+                derive=args.derive,
+                chip=args.chip,
+                chips_dir=args.chips_dir,
             )
         except labwired_sim.LabwiredError as exc:
             self.die(str(exc))
