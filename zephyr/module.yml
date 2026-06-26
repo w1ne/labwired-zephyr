@@ -1,4 +1,11 @@
 # Makes labwired-zephyr a Zephyr module so `west` lists it in the workspace.
 # The runner/west-command registration is done from the west manifest
-# (west-commands.yml); this file just declares the module.
+# (west-commands.yml); this file declares the module and its board root.
 name: labwired-zephyr
+build:
+  settings:
+    # Adds <module>/boards to BOARD_ROOT for every build, and twister reads this
+    # same setting to discover the LabWired simulator boards — so the custom-sim
+    # boards work with zero --board-root / -DBOARD_ROOT plumbing once this repo
+    # is a module in the west workspace.
+    board_root: .

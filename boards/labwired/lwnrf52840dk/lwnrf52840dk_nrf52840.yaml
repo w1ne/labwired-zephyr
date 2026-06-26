@@ -1,0 +1,26 @@
+identifier: lwnrf52840dk/nrf52840
+name: nRF52840 DK on the LabWired simulator
+type: mcu
+arch: arm
+ram: 256
+flash: 1024
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+# Stock twister drives a `custom` sim through the board's `ninja run` target
+# (see board.cmake -> run_custom). No twister or Zephyr fork.
+simulation: custom
+# The "emulator binary" twister checks for on PATH before marking the run
+# handler ready; the board.cmake run_custom target drives it via labwired_sim.
+simulation_exec: labwired
+testing:
+  ignore_tags:
+    # Scope the runnable set honestly to what LabWired exercises today on this
+    # SoC: CPU + SysTick + UART (+ GPIO). Networking/BT/sensor suites are out.
+    - net
+    - bluetooth
+supported:
+  - gpio
+  - uart
+vendor: labwired

@@ -1,0 +1,6 @@
+board:
+  name: lwnrf52840dk
+  vendor: labwired
+  socs:
+  # The real nRF52840 SoC (PCA10056 wiring); only the sim run target is added.
+  - name: nrf52840
