@@ -1,0 +1,45 @@
+/dts-v1/;
+/ {
+	model = "Nordic nRF52840 DK NRF52840";
+	aliases {
+		led0 = &led0;
+		sw0 = &button0;
+	};
+	chosen {
+		zephyr,console = &uart0;
+	};
+	soc {
+		gpio0: gpio@50000000 {
+			compatible = "nordic,nrf-gpio";
+			reg = <0x50000000 0x200>;
+			#gpio-cells = <0x2>;
+			gpio-controller;
+			phandle = <0x6>;
+		};
+		uart0: uart@40002000 {
+			compatible = "nordic,nrf-uarte";
+			reg = <0x40002000 0x1000>;
+			interrupts = <0x2 0x1>;
+			status = "okay";
+			phandle = <0x7>;
+		};
+	};
+	leds {
+		compatible = "gpio-leds";
+		led0: led_0 {
+			gpios = <&gpio0 0xd 0x1>;
+			label = "Green LED 0";
+		};
+		led1: led_1 {
+			gpios = <&gpio0 0xe 0x0>;
+			label = "Green LED 1";
+		};
+	};
+	buttons {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <&gpio0 0xb 0x1>;
+			label = "Push button switch 0";
+		};
+	};
+};
