@@ -1,0 +1,45 @@
+name: ci
+
+# Always-on gate for the DTS-conversion logic. Runs on github-hosted ubuntu with
+# no Zephyr toolchain and no hardware: pure-Python unit tests over the
+# devicetree -> LabWired system/chip derivation plus the board-map validator.
+#
+# Drift protection is folded into this gate, not a separate job: tests/test_dts_to_system.py
+# and tests/test_dts_to_chip.py load the committed fixture
+# tests/fixtures/nrf52840dk_merged.dts and assert on the derived board_io and SoC
+# peripheral map, so any silent change in derivation output fails pytest here.
+#
+# The heavyweight twister/ztest end-to-end proof is intentionally NOT here; it
+# needs a Zephyr SDK and a labwired binary and lives in twister-e2e.yml as a
+# manual (workflow_dispatch) job.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    name: converter unit tests (no toolchain)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install test deps
+        # The DTS parser is Zephyr's canonical dtlib, published on PyPI as the
+        # `devicetree` distribution (imported as `devicetree.dtlib`). Note: it is
+        # NOT `python-devicetree` on PyPI -- that name 404s.
+        run: python -m pip install --upgrade pip devicetree pytest
+
+      - name: Run pytest
+        # Unit suite runs everywhere; the two integration tests self-skip when
+        # LABWIRED_BIN / a LabWired systems dir are absent (they are, here).
+        run: python -m pytest -v
