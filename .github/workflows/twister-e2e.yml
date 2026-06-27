@@ -1,0 +1,94 @@
+name: twister-e2e
+
+# End-to-end proof: stock Zephyr twister -> west build -> ninja run -> the
+# `labwired` binary -> ztest/console scoring (scripts/twister_smoke.sh).
+#
+# This is NOT wired to run on every PR, and it does NOT run on github-hosted
+# runners by default. It is heavy and environment-bound:
+#   - a Zephyr v3.7 workspace + an arm toolchain (SDK, ~15GB), and
+#   - a `labwired` binary built from labwired-core `main`
+#     (older binaries interleave logs into stdout and the harness mis-scores).
+# github-hosted ubuntu has neither, and at the time this workflow was added no
+# self-hosted runner was registered for this repo, so this job is manual-trigger
+# only (workflow_dispatch). Run it on a machine that already has the toolchain
+# and the binary -- e.g. a self-hosted runner provisioned with both -- by
+# selecting that runner's label below.
+#
+# Nothing here is faked: if the required inputs/environment are absent the job
+# fails loudly (scripts/twister_smoke.sh hard-checks every required variable).
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: >-
+          Runner label to execute on. Must be a runner that already has a Zephyr
+          v3.7 SDK/toolchain and a labwired-core `main` binary. The default
+          github-hosted ubuntu-latest has NEITHER and the job will fail the
+          preflight check -- that is intentional, not a false green.
+        required: true
+        default: self-hosted
+      zephyr_base:
+        description: Path to a Zephyr v3.7 workspace (ZEPHYR_BASE) on the runner.
+        required: true
+      labwired_bin_dir:
+        description: Dir holding the `labwired` binary (LABWIRED_BIN_DIR) on the runner.
+        required: true
+      labwired_chips_dir:
+        description: LabWired configs/chips dir (LABWIRED_CHIPS_DIR) on the runner.
+        required: true
+      zephyr_venv_bin:
+        description: Optional west venv bin dir (ZEPHYR_VENV_BIN) to prepend to PATH.
+        required: false
+        default: ''
+      twister_args:
+        description: >-
+          Extra args for scripts/twister_smoke.sh. Empty = the default smoke
+          (sample.basic.helloworld + tests/ztest/base, both via the custom backend).
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: twister ztest smoke (custom backend)
+    runs-on: ${{ inputs.runner }}
+    env:
+      ZEPHYR_BASE: ${{ inputs.zephyr_base }}
+      LABWIRED_BIN_DIR: ${{ inputs.labwired_bin_dir }}
+      LABWIRED_CHIPS_DIR: ${{ inputs.labwired_chips_dir }}
+      ZEPHYR_VENV_BIN: ${{ inputs.zephyr_venv_bin }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preflight (fail clearly if toolchain/binary are missing)
+        run: |
+          set -euo pipefail
+          fail=0
+          if [ ! -x "${LABWIRED_BIN_DIR}/labwired" ]; then
+            echo "::error::no labwired binary at ${LABWIRED_BIN_DIR}/labwired -- build it from labwired-core main"
+            fail=1
+          fi
+          if [ ! -d "${ZEPHYR_BASE}/samples/hello_world" ]; then
+            echo "::error::ZEPHYR_BASE=${ZEPHYR_BASE} is not a Zephyr workspace"
+            fail=1
+          fi
+          if [ ! -d "${LABWIRED_CHIPS_DIR}" ]; then
+            echo "::error::LABWIRED_CHIPS_DIR=${LABWIRED_CHIPS_DIR} not found"
+            fail=1
+          fi
+          command -v west >/dev/null || { echo "::error::west not on PATH (need the Zephyr venv / SDK)"; fail=1; }
+          exit $fail
+
+      - name: Run twister smoke
+        run: ./scripts/twister_smoke.sh ${{ inputs.twister_args }}
+
+      - name: Upload twister output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: twister-out
+          path: twister-out/
+          if-no-files-found: ignore
