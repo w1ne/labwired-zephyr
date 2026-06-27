@@ -1,0 +1,7 @@
+board:
+  name: lwnucleo_l476rg
+  vendor: labwired
+  socs:
+  # The real STM32L476RG SoC (NUCLEO-L476RG wiring); only the sim run target is
+  # added on top of the upstream board, no silicon changes.
+  - name: stm32l476xx

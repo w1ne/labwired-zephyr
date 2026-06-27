@@ -1,0 +1,5 @@
+# Copyright (c) 2026 Andrii Shylenko
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_LWNUCLEO_L476RG
+	select SOC_STM32L476XX
