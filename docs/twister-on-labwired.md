@@ -63,6 +63,30 @@ When this repo is a real module in the west manifest, the `board_root` in
 `zephyr/module.yml` makes both halves automatic — no `--board-root` or
 `ZEPHYR_EXTRA_MODULES` needed.
 
+## Two vendors, one mechanism
+
+The bridge is proven on two silicon vendors with the *same* SoC-agnostic run
+shim and *zero* converter changes:
+
+| Board | SoC | Vendor | Derivation | Result |
+|---|---|---|---|---|
+| `lwnrf52840dk` | nRF52840 | Nordic | board_io from Nordic DTS nodes | console + ztest |
+| `lwnucleo_l476rg` | STM32L476 | ST | board_io from ST DTS nodes (`gpioa`/`gpioc`) | console + ztest |
+
+The L476 board's system manifest is derived from ST's own devicetree — different
+`compatible` strings, different bus-node shapes — and the `dts_to_system` /
+`dts_to_chip` derivation generalised with no code edits, which is the point: this
+rides Zephyr's whole board ecosystem, not one vendor.
+
+Bringing up the second vendor also surfaced (and fixed) a real silicon-model
+fidelity gap, exactly the kind running unmodified ztest is meant to catch: the
+STM32 USARTv2 model dropped the baud-rate register (BRR) read-back, so every
+`CONFIG_ASSERT=y` image (the ztest kernel suites) tripped
+`uart_stm32_set_baudrate`'s `__ASSERT(BRR >= 16)` and hung silently at PRE_KERNEL
+boot, while the console sample ran (the byte path ignores BRR). Fixed in
+labwired-core (USARTv2 BRR read-back); the L476 ztest suites then run to
+`PROJECT EXECUTION SUCCESSFUL`.
+
 ## Add a board
 
 The only gate is that LabWired already models the SoC (to silicon fidelity — the
@@ -71,7 +95,8 @@ differentiator being scaled, not raw count). Then it is declarative, no code:
 1. A board root entry under `boards/labwired/<board>/` reusing the upstream SoC
    devicetree, declaring `simulation: custom` + `simulation_exec: labwired`, with
    a `board.cmake` that sets `SUPPORTED_EMU_PLATFORMS custom` and defines
-   `run_custom` over `scripts/labwired_run.py` (copy `lwnrf52840dk`'s).
+   `run_custom` over `scripts/labwired_run.py` (copy `lwnrf52840dk`'s or
+   `lwnucleo_l476rg`'s).
 2. Either add a `boards.map` line (`<board target>: <system>.yaml`) pointing at a
    LabWired system manifest, or rely on the DTS-derivation fallback by exporting
    `LABWIRED_CHIP`/`LABWIRED_CHIPS_DIR`.
