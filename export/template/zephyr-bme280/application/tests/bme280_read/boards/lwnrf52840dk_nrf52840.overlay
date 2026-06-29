@@ -1,3 +1,19 @@
+/*
+ * Simulator boot fix: the board DTS sets gpio-as-nreset on the UICR node
+ * which defines CONFIG_GPIO_AS_PINRESET at compile time.  SystemInit then
+ * writes UICR.PSELRESET and calls NVIC_SystemReset() if the registers read
+ * as 0xFFFFFFFF — which they always do in LabWired's UICR model because
+ * flash-erase values are never persisted across simulated resets.  The result
+ * is an infinite boot loop before any UART output is produced.
+ *
+ * Deleting the property here removes CONFIG_GPIO_AS_PINRESET from the build,
+ * so SystemInit skips the PSELRESET write-and-reset sequence.  The reset pin
+ * is only relevant on real silicon; the simulator does not need it.
+ */
+&uicr {
+    /delete-property/ gpio-as-nreset;
+};
+
 &i2c0 {
     status = "okay";
     bme280@76 {
