@@ -1,0 +1,19 @@
+# west.yml — the exported repo is the manifest repo (self)
+manifest:
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+    - name: w1ne
+      url-base: https://github.com/w1ne
+  projects:
+    - name: zephyr
+      remote: zephyrproject-rtos
+      revision: v3.7.0
+      import: true
+    - name: labwired-zephyr-dts
+      remote: w1ne
+      revision: main
+      path: modules/labwired-zephyr-dts
+      west-commands: west-commands.yml
+  self:
+    path: application
