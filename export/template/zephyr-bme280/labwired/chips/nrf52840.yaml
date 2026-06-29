@@ -13,6 +13,10 @@ peripherals:
     base_address: 0x40002000
     size: "4KB"
     irq: 2
+  # SPIM0/SPIS0/TWIM0/TWIS0/SPI0/TWI0 — all share 0x40003000.  LabWired maps
+  # the generic spi model here (matches the upstream bundled descriptor).  The
+  # Zephyr TWIM0 driver writes arrive at this model; device_is_ready() returns
+  # false for any I2C device on this bus (expected in sim when LABWIRED_NO_EXTERNAL_DEVICES=1).
   - id: "spi0"
     type: "spi"
     base_address: 0x40003000
@@ -84,14 +88,6 @@ peripherals:
     base_address: 0x40006000
     size: "4KB"
     irq: 6
-  # TWI0 / I2C0 — the Zephyr DTS label is i2c0 (0x40003000, IRQ 3).
-  # This is the peripheral the BME280 overlay binds to via &i2c0.
-  - id: "i2c0"
-    type: "nrf52840_i2c"
-    base_address: 0x40003000
-    size: "4KB"
-    irq: 3
-  # TWI1 / I2C1 at 0x40004000 (Zephyr label: i2c1)
   - id: "twi1"
     type: "nrf52840_i2c"
     base_address: 0x40004000
