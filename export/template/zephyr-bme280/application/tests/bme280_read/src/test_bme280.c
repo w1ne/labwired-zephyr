@@ -15,18 +15,16 @@ ZTEST(bme280_read, test_device_node_in_dts)
     TC_PRINT("BME280 DTS node found; device_is_ready: %d\n", device_is_ready(dev));
 }
 
-/* Read temperature from a live BME280 model.  Skipped when the simulator does
-   not yet model this device on the target chip (device_is_ready returns false).
-   If the device IS ready the assertion is load-bearing: a model that reports
-   fetch success but returns all-zero data fails the plausibility gate. */
+/* Read temperature from the live BME280 model.  With i2c0 modeled as
+   nrf52840_serial the Nrf52SerialInstance mux is instantiated and the BME280
+   is attached, so device_is_ready() MUST return true.  A silent skip here
+   would mask the very regression this test was introduced to catch. */
 ZTEST(bme280_read, test_fetch_temperature_in_range)
 {
     const struct device *dev = DEVICE_DT_GET_ANY(bosch_bme280);
-    if (dev == NULL || !device_is_ready(dev)) {
-        TC_PRINT("BME280 not ready — simulator does not model this device; skipping read test\n");
-        ztest_test_skip();
-        return;
-    }
+    zassert_not_null(dev, "BME280 device node not found in DTS");
+    zassert_true(device_is_ready(dev),
+                 "BME280 must be ready now that i2c0 is modeled as nrf52840_serial");
     zassert_ok(sensor_sample_fetch(dev), "sensor_sample_fetch failed");
 
     struct sensor_value temp;
