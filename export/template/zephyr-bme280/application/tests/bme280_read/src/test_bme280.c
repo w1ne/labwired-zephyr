@@ -20,6 +20,9 @@ ZTEST(bme280_read, test_fetch_temperature_in_range)
     struct sensor_value temp;
     zassert_ok(sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, &temp),
                "sensor_channel_get(TEMP) failed");
+    /* A live BME280 read is never exactly zero across both fields; reject a
+       dead/zero model that reports fetch success but returns no data. */
+    zassert_false(temp.val1 == 0 && temp.val2 == 0, "dead/zero temperature read");
     /* BME280 operating range is -40..85 C; assert a plausible non-extreme read
        so a dead/zero model would fail rather than pass. */
     zassert_true(temp.val1 > -40 && temp.val1 < 85,
