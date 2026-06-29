@@ -29,9 +29,10 @@ export LABWIRED_MAX_STEPS="${LABWIRED_MAX_STEPS:-20000000}"
 OUT="${OUT:-${REPO}/twister-out}"
 BOARD="lwnrf52840dk/nrf52840"
 
-# --board-root makes twister discover the board; ZEPHYR_EXTRA_MODULES applies the
-# module's board_root to the build (real workspaces get this from the manifest).
-ARGS=(-p "${BOARD}" --board-root "${REPO}/boards" -x ZEPHYR_EXTRA_MODULES="${REPO}" -O "${OUT}")
+# --board-root points twister to the module root (it scans <board-root>/boards/
+# for board.yml files); ZEPHYR_EXTRA_MODULES wires the same root into the build
+# (real workspaces get this from the manifest).
+ARGS=(-p "${BOARD}" --board-root "${REPO}" -x ZEPHYR_EXTRA_MODULES="${REPO}" -O "${OUT}")
 if [ "$#" -gt 0 ]; then
   ARGS+=("$@")
 else
