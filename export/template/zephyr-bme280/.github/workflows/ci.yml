@@ -56,7 +56,7 @@ jobs:
           MOD="${{ github.workspace }}/modules/labwired-zephyr-dts"
           export LABWIRED_BIN_DIR="$HOME/lwbin"
           "$MOD/scripts/twister_smoke.sh" \
-            -T "${{ github.workspace }}/application/tests/bme280_read" \
+            -T "${{ github.workspace }}/application/application/tests/bme280_read" \
             -s app.bme280_read
 
       - name: Upload twister output
