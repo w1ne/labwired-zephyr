@@ -39,7 +39,7 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsSL -o lw.tgz \
-            https://github.com/w1ne/labwired-core/releases/download/v0.17.6/labwired-v0.17.6-linux-x86_64.tar.gz
+            https://github.com/w1ne/labwired-core/releases/download/v0.17.7/labwired-v0.17.7-linux-x86_64.tar.gz
           mkdir -p "$HOME/lwbin"
           tar xzf lw.tgz -C "$HOME/lwbin"
           chmod +x "$HOME/lwbin/labwired"
