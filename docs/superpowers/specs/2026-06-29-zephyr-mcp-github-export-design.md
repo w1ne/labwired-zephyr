@@ -16,6 +16,15 @@ Kconfig / BSP grounded in real bindings) on top of the already-shipped
 `labwired-zephyr-dts` "run + grounding" layer (`west simulate`,
 twister-on-LabWired, DTS → manifest derivation).
 
+**North star:** make it possible to build *fully validated devices — Zephyr and
+bare-metal — entirely via MCP*. LabWired already runs bare-metal firmware
+(`labwired_compile_firmware` / `build_and_run` over the example ELFs); this
+work adds the Zephyr authoring+export path. The MVP below is the first
+end-to-end proof (Zephyr + BME280). Where it is cheap, the tool surface
+(scaffold → build+validate → export self-verifying repo) should generalize so a
+bare-metal track can reuse the same `build_and_sim` + `export` spine later;
+where generalizing is not cheap, stay Zephyr-specific and defer.
+
 ## MVP slice
 
 - **Board:** `nrf52840dk/nrf52840` — Phase-0 proven, and the committed DTS
