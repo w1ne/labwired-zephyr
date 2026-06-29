@@ -10,7 +10,7 @@ manifest:
       remote: zephyrproject-rtos
       revision: v3.7.0
       import: true
-    - name: labwired-zephyr-dts
+    - name: labwired-zephyr
       remote: w1ne
       revision: feat/zephyr-mcp-export
       path: modules/labwired-zephyr-dts

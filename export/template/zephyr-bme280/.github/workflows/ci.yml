@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install pytest devicetree
-      - run: git clone --depth 1 https://github.com/w1ne/labwired-zephyr-dts module
+      - run: git clone --depth 1 https://github.com/w1ne/labwired-zephyr module
       - run: cd module && python -m pytest -q tests/test_dts_to_system.py tests/test_dts_to_chip.py
 
   build-and-sim:
