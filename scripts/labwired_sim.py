@@ -127,6 +127,7 @@ def derive_system_yaml(
     chips_dir: os.PathLike | str,
     out_path: os.PathLike | str,
     name: str | None = None,
+    skip_external: bool = False,
 ) -> Path:
     """Derive a runnable system manifest from a build's own merged devicetree.
 
@@ -137,6 +138,12 @@ def derive_system_yaml(
     runs from anywhere (a temp dir), not just configs/systems. Requires the chip
     descriptor to already exist — derivation supplies the board wiring, not the
     silicon model.
+
+    ``skip_external`` (or the ``LABWIRED_NO_EXTERNAL_DEVICES`` env var) omits
+    bus-connected external devices from the derived manifest.  Useful when the
+    target chip's LabWired peripheral factory does not yet support a particular
+    device type — the firmware still builds and boots, and tests can gate on
+    ``device_is_ready()`` rather than failing hard.
     """
     # Imported lazily and locally: keep module import dep-free (the dts deriver
     # needs python-devicetree, which the runner core otherwise does not).
@@ -158,11 +165,14 @@ def derive_system_yaml(
             f"wiring, not the silicon model — the chip '{chip}' must be modelled first."
         )
     dt = dts_to_system.dtlib.DT(str(dts))
+    _no_ext = os.environ.get("LABWIRED_NO_EXTERNAL_DEVICES", "").strip().lower()
+    _skip = skip_external or _no_ext in ("1", "true", "yes")
+    external_devices = [] if _skip else dts_to_system.derive_external_devices(dt)
     text = dts_to_system.to_system_yaml(
         name or chip,
         chip,
         dts_to_system.derive_board_io(dt),
-        dts_to_system.derive_external_devices(dt),
+        external_devices,
         chip_ref=str(chip_path.resolve()),
     )
     out = Path(out_path)

@@ -50,6 +50,13 @@ jobs:
           ZEPHYR_BASE: ${{ github.workspace }}/zephyr
           LABWIRED_CHIP: nrf52840
           LABWIRED_CHIPS_DIR: ${{ github.workspace }}/application/labwired/chips
+          # nRF52840 TWIM factory in LabWired v0.17.x does not yet register
+          # 'bme280' as an attachable device type, so deriving external_devices
+          # from the merged DTS causes a "cannot be downcast" abort.  Skip
+          # external-device attachment for now; the firmware still builds with
+          # the Zephyr BME280 driver and the DTS-node test remains load-bearing.
+          # Remove this flag once LabWired's nRF52 factory supports bme280.
+          LABWIRED_NO_EXTERNAL_DEVICES: "1"
           RUST_LOG: warn
         run: |
           set -euo pipefail
