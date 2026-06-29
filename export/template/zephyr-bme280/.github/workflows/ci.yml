@@ -48,7 +48,6 @@ jobs:
       - name: Twister — build, boot in LabWired, score ztest
         env:
           ZEPHYR_BASE: ${{ github.workspace }}/zephyr
-          LABWIRED_BIN_DIR: ${{ env.HOME }}/lwbin
           LABWIRED_CHIP: nrf52840
           LABWIRED_CHIPS_DIR: ${{ github.workspace }}/application/labwired/chips
           RUST_LOG: warn
