@@ -1,0 +1,9 @@
+common:
+  harness: ztest
+  tags:
+    - sensor
+    - bme280
+tests:
+  app.bme280_read:
+    platform_allow:
+      - lwnrf52840dk/nrf52840
