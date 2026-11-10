@@ -1,13 +1,13 @@
 # labwired-zephyr
 
-Run Zephyr applications in the [LabWired](https://github.com/w1ne/labwired)
+Run Zephyr applications in the [LabWired](https://github.com/w1ne/labwired-core)
 deterministic simulator straight from your west workflow — build for a real
 board, then boot the firmware in the sim and watch the UART console, no hardware
 attached.
 
 ```
 west build -b nrf52840dk/nrf52840 samples/hello_world
-west simulate
+west labwired-simulate
 ```
 
 ```
@@ -16,12 +16,12 @@ Hello World! nrf52840dk/nrf52840
 ```
 
 LabWired runs the **unmodified** ELF (the same binary you would flash), so the
-kernel, drivers, and your code execute against silicon-accurate peripheral
+kernel, drivers, and your code execute against modeled peripheral
 models. Exit code and console output make it usable as a CI smoke test.
 
 ## How it works
 
-`west simulate` resolves the build's board target to a LabWired *system
+`west labwired-simulate` resolves the build's board target to a LabWired *system
 manifest* via [`boards.map`](boards.map), then runs:
 
 ```
@@ -29,9 +29,13 @@ labwired --firmware build/zephyr/zephyr.elf --system <mapped>.yaml --max-steps N
 ```
 
 streaming the console and propagating the exit code. The same core also backs a
-`ZephyrBinaryRunner` (`west flash -r labwired`) for setups that register
-out-of-tree runners; `west simulate` is the zero-configuration path and is
-recommended.
+`ZephyrBinaryRunner` for native `west flash` and `west simulate` on Zephyr 4.5
+with the optional module below. `west labwired-simulate` works with both Zephyr
+3.7 and 4.5 once this west extension and the simulator paths are configured.
+
+The command uses a distinct name because stock Zephyr already registers
+`west simulate`. Registering a second command with that name causes west to
+ignore one of the extensions.
 
 ## Setup
 
@@ -92,11 +96,33 @@ Representative examples:
 
 ## Using the runner instead
 
-Stock Zephyr discovers runners from a fixed list, so `west flash -r labwired`
-requires the `labwired` runner to be importable on the `runners` package path
-(e.g. a `PYTHONPATH` entry pointing at `scripts/runners`, or vendoring the file).
-The runner accepts the same `--labwired-bin` / `--system` / `--systems-dir` /
-`--max-steps` / `--timeout` options. `west simulate` needs none of this.
+On **Zephyr 4.5**, enable the optional native runner module in the shell used
+for both building and running:
+
+```bash
+# From the west workspace root; keep any existing extra modules.
+export ZEPHYR_EXTRA_MODULES="${ZEPHYR_EXTRA_MODULES:+${ZEPHYR_EXTRA_MODULES};}$(west list labwired-zephyr -f '{abspath}')/native-runner"
+export LABWIRED_BIN=/path/to/labwired
+export LABWIRED_SYSTEMS_DIR=/path/to/labwired-core/configs/systems
+west build -p always -b nrf52840dk/nrf52840 zephyr/samples/hello_world
+west simulate -r labwired
+west flash -r labwired
+```
+
+The optional module uses Zephyr's [external runner metadata](https://docs.zephyrproject.org/latest/develop/modules.html#external-runners)
+and CMake runner registration. Both commands execute the simulator. It adds
+LabWired alongside the board's existing runners and keeps the hardware flash
+default. Keep `ZEPHYR_EXTRA_MODULES` exported when running west; a CMake-only
+`-DZEPHYR_EXTRA_MODULES=...` setting does not register the Python runner for
+the later west process. Reconfigure an existing build after enabling it.
+
+Zephyr **3.7** does not support this native module metadata. Leave the optional
+module disabled and use `west labwired-simulate`. The root module remains valid
+for 3.7. Adding `scripts/runners` to `PYTHONPATH` alone does not register a runner.
+Neither path changes an installed Zephyr checkout.
+
+The native runner accepts `--labwired-bin`, `--system`, `--systems-dir`,
+`--board-map`, `--max-steps`, and `--timeout`.
 
 ## Development
 
@@ -108,6 +134,18 @@ The unit tests (board resolution, CLI assembly, board-target detection) run
 anywhere. The integration test boots a pinned `nrf52840dk` `hello_world.elf`
 through the real CLI and is skipped unless `LABWIRED_BIN` and a LabWired
 `configs/systems` directory (`LABWIRED_SYSTEMS_DIR`) are available.
+
+`tests/test_west_integration.py` also requires `west`, `cmake`, and
+`ZEPHYR_BASE`. It registers the real stock Zephyr commands beside this module,
+uses Zephyr's CMake functions to register the native runner, and runs the
+committed firmware through both native commands. It checks failure propagation
+and verifies that the hardware flash default is preserved. Set
+`LABWIRED_REQUIRE_INTEGRATION=1` to fail on missing inputs. Native cases require
+4.5; `LABWIRED_REQUIRE_NATIVE=1` makes an older version a failure.
+
+The self-hosted `west-integration` workflow tests 3.7 and 4.5 with the released
+Core v0.25.0 binary. These checks use a prebuilt ELF; they do not replace a fresh
+Zephyr SDK build, a Twister run, or a test of every board in `boards.map`.
 
 ## License
 

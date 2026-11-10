@@ -5,12 +5,11 @@ This implements the spec's runner interface contract: ``flash`` resolves the
 board to a LabWired system manifest and shells out to the LabWired CLI using its
 existing ``--firmware``/``--system`` contract, streaming the UART console and
 propagating the exit code. The board-resolution and argv-assembly logic is
-shared with ``west simulate`` (see :mod:`labwired_sim`).
+shared with ``west labwired-simulate`` (see :mod:`labwired_sim`).
 
-Discovery note: stock Zephyr imports runners from a fixed list, so to use this
-as ``west flash -r labwired`` the module must be on the ``runners`` package path
-(see README). ``west simulate`` is the zero-configuration front end and needs no
-such registration.
+Zephyr 4.5 loads this file from the optional native-runner module metadata.
+Enable that module with ZEPHYR_EXTRA_MODULES for both build and run (see README).
+``west labwired-simulate`` also works on Zephyr 3.7 without native registration.
 """
 
 from __future__ import annotations
@@ -46,7 +45,7 @@ class LabwiredBinaryRunner(ZephyrBinaryRunner):
     def capabilities(cls):
         # 'flash' is the natural verb for "load and run on the target"; here the
         # target is the simulator.
-        return RunnerCaps(commands={"flash"})
+        return RunnerCaps(commands={"flash", "simulate"})
 
     @classmethod
     def do_add_parser(cls, parser):
@@ -77,7 +76,7 @@ class LabwiredBinaryRunner(ZephyrBinaryRunner):
                    timeout=args.timeout)
 
     def do_run(self, command, **kwargs):
-        if command != "flash":
+        if command not in {"flash", "simulate"}:
             raise ValueError(f"unsupported command: {command}")
         try:
             rc, _ = labwired_sim.simulate(

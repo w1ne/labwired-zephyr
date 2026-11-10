@@ -1,4 +1,4 @@
-"""``west simulate`` — run a freshly built Zephyr application in the LabWired
+"""``west labwired-simulate`` — run a freshly built Zephyr application in the LabWired
 deterministic simulator.
 
 This is the out-of-tree front end that works on stock Zephyr: register it from
@@ -6,7 +6,7 @@ your west manifest with ``west-commands: west-commands.yml`` on the
 labwired-zephyr project entry, then::
 
     west build -b nrf52840dk/nrf52840 samples/hello_world
-    west simulate
+    west labwired-simulate
 
 It is a thin shim over :mod:`labwired_sim`; the runner (``west flash -r
 labwired``) shares the same core.
@@ -31,7 +31,7 @@ _DEFAULT_BOARD_MAP = _REPO_ROOT / "boards.map"
 class Simulate(WestCommand):
     def __init__(self):
         super().__init__(
-            "simulate",
+            "labwired-simulate",
             "run a built Zephyr application in the LabWired simulator",
             "Boot the build's zephyr.elf in LabWired against the system manifest "
             "mapped from the board, streaming the UART console and propagating the "

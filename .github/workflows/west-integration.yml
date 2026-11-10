@@ -1,0 +1,65 @@
+name: west-integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firmware:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    strategy:
+      fail-fast: false
+      matrix:
+        zephyr: [v3.7.0, v4.5.0]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: labwired-zephyr
+      - uses: actions/checkout@v4
+        with:
+          repository: zephyrproject-rtos/zephyr
+          ref: ${{ matrix.zephyr }}
+          path: zephyr
+          sparse-checkout: |
+            scripts
+            cmake
+            share
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: w1ne/labwired-core
+          ref: v0.25.0
+          path: core
+          sparse-checkout: configs
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run real west and firmware integration
+        shell: bash
+        env:
+          LABWIRED_REQUIRE_INTEGRATION: '1'
+          LABWIRED_REQUIRE_NATIVE: ${{ matrix.zephyr == 'v4.5.0' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          contract_dir="$(mktemp -d "${RUNNER_TEMP}/labwired-west-contract.XXXXXX")"
+          trap 'rm -rf "$contract_dir"' EXIT
+          python -m venv "$contract_dir/venv"
+          "$contract_dir/venv/bin/python" -m pip install pytest devicetree west cmake jsonschema pyelftools
+          curl --fail --location --retry 2 \
+            https://github.com/w1ne/labwired-core/releases/download/v0.25.0/labwired-v0.25.0-linux-x86_64.tar.gz \
+            --output "$contract_dir/core.tar.gz"
+          printf '%s  %s\n' 3ccaa6219100fbd611521d6c823545521e664931f3293eae8144daaaa6bd6035 "$contract_dir/core.tar.gz" | sha256sum --check
+          tar -xzf "$contract_dir/core.tar.gz" -C "$contract_dir"
+          export PATH="$contract_dir/venv/bin:$PATH"
+          export ZEPHYR_BASE="$GITHUB_WORKSPACE/zephyr"
+          export LABWIRED_BIN="$contract_dir/labwired"
+          export LABWIRED_SYSTEMS_DIR="$GITHUB_WORKSPACE/core/configs/systems"
+          cd "$GITHUB_WORKSPACE/labwired-zephyr"
+          python -m pytest -q tests/test_integration.py tests/test_west_integration.py
