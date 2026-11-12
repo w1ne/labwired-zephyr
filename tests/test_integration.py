@@ -42,6 +42,8 @@ def _systems_dir():
 
 _BIN = _labwired_bin()
 _SYS = _systems_dir()
+if os.environ.get("LABWIRED_REQUIRE_INTEGRATION") == "1" and (_BIN is None or _SYS is None):
+    raise RuntimeError("LABWIRED_BIN and LABWIRED_SYSTEMS_DIR are required for this integration gate")
 pytestmark = pytest.mark.skipif(
     _BIN is None or _SYS is None,
     reason="needs LABWIRED_BIN and a LabWired configs/systems dir (LABWIRED_SYSTEMS_DIR)",

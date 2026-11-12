@@ -1,0 +1,7 @@
+# Optional Zephyr >= 4.5 module. Keep the parent module metadata readable by
+# Zephyr 3.7, whose schema does not accept the runners key.
+name: labwired-native-runner
+build:
+  cmake: .
+runners:
+  - file: ../scripts/runners/labwired.py
